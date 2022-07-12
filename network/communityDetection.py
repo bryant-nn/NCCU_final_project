@@ -27,7 +27,7 @@ def buildNetwork():
     name_dic1 = {}
     G = ig.Graph(523, directed=True)
     # ------- build network ---------
-    for i in range(2, 9463):
+    for i in range(2, 9551):
 
         name = ws.cell(row=i, column=1).value
         following = ws.cell(row=i, column=2).value
@@ -41,15 +41,16 @@ def buildNetwork():
         if following not in name_dic1:
             name_dic1[following] = len(name_dic1)
 
-        # try:
         G.add_edges([(name_dic1[name], name_dic1[following])])
 
     layout = G.layout(layout='auto')
     # ig.plot(G, layout=layout, target='network.png')
-    # except:
-    # print(name, following)
-    # print(name_dic[name], name_dic[following])
-    # break
+
+    with open('graph_layout.pickle', 'wb') as f:
+        pickle.dump(G, f)
+        pickle.dump(layout, f)
+        pickle.dump(name_dic1, f)
+
     return (G, layout, name_dic1)
 # ------- function to return key for any value -----------
 
@@ -67,26 +68,40 @@ def communityDetection(G, layout, name_dic):
     part = louvain.find_partition(G, louvain.ModularityVertexPartition)
     # print(part)
 
-    output_file = open('community2.txt', 'w')
+    output_file = open('community.txt', 'w')
+    output_file_1 = open('community1.txt', 'w')
+    output_file_2 = open('community2.txt', 'w')
 
     ret_list = []
 
     for i in range(len(part)):
+        output_file_2.write(f'community {i}\n')
+        output_file_1.write(f'community {i}\n')
         output_file.write(f'community {i}\n')
-        # output_file_1.write(f'community {i}\n')
 
         temp_dic = {}
+        chinese_name_list = []
+
         for people in part[i]:
             name = get_key(people, name_dic)
             temp_dic[name] = data[name]
 
-        output_file.write(str(temp_dic))
+            chinese_name_list.append(data[name])
+
+        output_file_2.write(str(temp_dic))
+        output_file_2.write('\n')
+
+        output_file_1.write(str(chinese_name_list))
+        output_file_1.write('\n')
+
+        output_file.write(str(part[i]))
         output_file.write('\n')
 
         ret_list.append(temp_dic)
 
+    output_file_2.close()
+    output_file_1.close()
     output_file.close()
-    # output_file_1.close()
 
     # ig.plot(part, layout=layout, target='community_detection.png')
 
